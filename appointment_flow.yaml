@@ -1,0 +1,71 @@
+nodes:
+  - id: greet
+    prompt: "Hello! Welcome to Eden Medbot. How can I assist you today?"
+    transitions:
+      - condition: "schedule"
+        target: ask_name_dob
+      - condition: "onboard"
+        target: start_onboarding
+      - condition: "triage"
+        target: ask_symptoms
+      - condition: "operator"
+        target: transfer_human
+
+  - id: ask_name_dob
+    prompt: "Can I have your full name and date of birth, please?"
+    entities: [patient_name, dob]
+    on_success: ask_specialty
+
+  - id: ask_specialty
+    prompt: "Which specialist would you like to see? (e.g., cardiologist, dermatologist)"
+    entities: [specialty]
+    on_success: ask_preferred_date
+
+  - id: ask_preferred_date
+    prompt: "What date and time would you prefer for your appointment?"
+    entities: [preferred_date]
+    on_success: ask_insurance
+
+  - id: ask_insurance
+    prompt: "Can I have your insurance provider and member ID?"
+    entities: [insurance_provider, insurance_id]
+    on_success: confirm
+
+  - id: confirm
+    prompt: "You requested an appointment with a {specialty} on {preferred_date}. Is that correct?"
+    transitions:
+      - condition: "yes"
+        target: end
+      - condition: "no"
+        target: ask_preferred_date
+
+  - id: end
+    prompt: "Your appointment has been scheduled. Thank you for calling Eden Medbot."
+
+  - id: ask_symptoms
+    prompt: "Can you briefly describe your symptoms?"
+    entities: [symptoms]
+    on_success: check_urgency
+
+  - id: check_urgency
+    prompt: "Analyzing symptoms..."
+    action: check_symptom_urgency
+    transitions:
+      - condition: "high_risk"
+        target: escalate_to_nurse
+      - condition: "low_risk"
+        target: ask_name_dob
+
+  - id: escalate_to_nurse
+    prompt: "Your symptoms may require urgent attention. Please hold while I transfer you to a nurse."
+
+  - id: start_onboarding
+    prompt: "Let's get you onboarded. Can I have your full name and date of birth?"
+    entities: [patient_name, dob]
+    on_success: end_onboarding
+
+  - id: end_onboarding
+    prompt: "Thank you {patient_name}! You are now onboarded. How else can I assist you?"
+
+  - id: transfer_human
+    prompt: "Please hold while I transfer you to a human agent."
